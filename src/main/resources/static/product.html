@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product – Aurelia</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">
+    <span class="logo-icon">💎</span>
+    <div>
+      <div class="logo-text">Aurelia</div>
+      <div class="logo-sub">Fine Jewellery</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="index.html#about">About Us</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <form class="search-box" id="navbar-search">
+      <input type="text" id="navbar-search-input" placeholder="Search jewellery...">
+      <button type="submit">🔍</button>
+    </form>
+    <button class="cart-btn" onclick="window.location.href='cart.html'">
+      🛒 Cart <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="breadcrumb" id="breadcrumb">
+  <a href="index.html">Home</a><span>›</span>
+  <a href="shop.html">Shop</a><span>›</span>
+  <span id="bc-name">Product</span>
+</div>
+
+<div id="product-detail"></div>
+
+<!-- RELATED PRODUCTS -->
+<section class="section section-alt">
+  <div class="section-header">
+    <h2>You May Also <span>Like</span></h2>
+  </div>
+  <div class="products-grid" id="related-products"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo"><span class="logo-icon">💎</span><div><div class="logo-text">Aurelia</div></div></div>
+      <p>Your ultimate destination for fine jewellery.</p>
+    </div>
+    <div class="footer-col"><h4>Quick Links</h4><ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="cart.html">Cart</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Help</h4><ul>
+      <li><a href="#">Size Guide</a></li>
+      <li><a href="#">Returns</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Contact</h4><ul>
+      <li><a href="index.html#contact">Contact Us</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Aurelia Fine Jewellery. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="js/cart.js"></script>
+<script>
+let currentProduct = null;
+let selectedSize  = null;
+let selectedColor = null;
+let qty = 1;
+
+async function loadProduct() {
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) { window.location.href = 'shop.html'; return; }
+
+  const p = await fetch(`/api/products/${id}`).then(r => r.json());
+  currentProduct = p;
+  document.title = `${p.name} – Aurelia`;
+  document.getElementById('bc-name').textContent = p.name;
+
+  const sizes  = p.sizes.split(',');
+  const colors = p.colors ? p.colors.split(',') : [];
+
+  document.getElementById('product-detail').innerHTML = `
+    <div class="detail-layout">
+      <div class="detail-image">
+        <img src="${p.imageUrl}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/600x500?text=Aurelia'">
+      </div>
+      <div class="detail-info">
+        <div class="detail-brand">${p.brand} · ${p.category}</div>
+        <h1 class="detail-name">${p.name}</h1>
+        <div class="product-rating" style="margin:10px 0;">
+          <span class="stars">${renderStars(p.rating)}</span>
+          <span class="rating-val">${p.rating} / 5.0</span>
+        </div>
+        <span class="stock-badge ${p.stock > 0 ? 'in-stock' : 'out-stock'}">
+          ${p.stock > 0 ? `✓ In Stock (${p.stock} left)` : '✕ Out of Stock'}
+        </span>
+        <div class="detail-price-row">
+          <span class="detail-price">${formatPrice(p.price)}</span>
+          ${p.originalPrice > p.price ? `<span class="detail-original">${formatPrice(p.originalPrice)}</span>` : ''}
+          ${p.discountPercent > 0 ? `<span class="detail-discount">${p.discountPercent}% OFF</span>` : ''}
+        </div>
+        <p class="detail-desc">${p.description}</p>
+
+        <div class="detail-section-title">Select Size</div>
+        <div class="sizes-grid" id="sizes-grid">
+          ${sizes.map(s => `<button class="size-btn" data-size="${s}" onclick="selectSize('${s}')">${s}</button>`).join('')}
+        </div>
+        <div id="size-error" style="color:#e53935;font-size:0.85rem;margin-bottom:10px;display:none;">⚠ Please select a size</div>
+
+        ${colors.length > 0 ? `
+        <div class="detail-section-title">Select Colour</div>
+        <div class="colors-row" id="colors-row">
+          ${colors.map(c => `<button class="color-btn" data-color="${c}" onclick="selectColor('${c}')">${c}</button>`).join('')}
+        </div>` : ''}
+
+        <div class="detail-section-title">Quantity</div>
+        <div class="qty-row">
+          <div class="qty-control">
+            <button onclick="changeQty(-1)">−</button>
+            <span id="qty-display">1</span>
+            <button onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn-add-cart" onclick="addToCart()">🛒 Add to Cart</button>
+          <button class="btn-buy-now" onclick="buyNow()">⚡ Buy Now</button>
+        </div>
+
+        <div style="margin-top:25px;padding:20px;background:var(--light-gray);border-radius:10px;display:flex;gap:20px;flex-wrap:wrap;">
+          <div style="font-size:0.85rem;color:var(--gray);">🚚 <strong>Free delivery</strong> on orders above ₹999</div>
+          <div style="font-size:0.85rem;color:var(--gray);">↩️ <strong>30-day</strong> easy returns</div>
+          <div style="font-size:0.85rem;color:var(--gray);">🔒 <strong>Secure</strong> checkout</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Load related products (same category)
+  const all = await fetch(`/api/products/search?category=${encodeURIComponent(p.category)}`).then(r => r.json());
+  const related = all.filter(x => x.id !== p.id).slice(0, 4);
+  document.getElementById('related-products').innerHTML = related.map(productCardHTML).join('');
+}
+
+function selectSize(s) {
+  selectedSize = s;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('selected', b.dataset.size === s));
+  document.getElementById('size-error').style.display = 'none';
+}
+
+function selectColor(c) {
+  selectedColor = c;
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.toggle('selected', b.dataset.color === c));
+}
+
+function changeQty(delta) {
+  qty = Math.max(1, Math.min(10, qty + delta));
+  document.getElementById('qty-display').textContent = qty;
+}
+
+function addToCart() {
+  if (!selectedSize) {
+    document.getElementById('size-error').style.display = 'block';
+    document.getElementById('sizes-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  const color = selectedColor || (currentProduct.colors ? currentProduct.colors.split(',')[0] : '');
+  Cart.add(currentProduct, selectedSize, color, qty);
+  showToast(`${currentProduct.name} (${selectedSize}) added to cart!`);
+}
+
+function buyNow() {
+  if (!selectedSize) {
+    document.getElementById('size-error').style.display = 'block';
+    return;
+  }
+  const color = selectedColor || (currentProduct.colors ? currentProduct.colors.split(',')[0] : '');
+  Cart.add(currentProduct, selectedSize, color, qty);
+  window.location.href = 'checkout.html';
+}
+
+loadProduct();
+</script>
+</body>
+</html>

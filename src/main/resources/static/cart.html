@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart – Aurelia</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">
+    <span class="logo-icon">💎</span>
+    <div>
+      <div class="logo-text">Aurelia</div>
+      <div class="logo-sub">Fine Jewellery</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="index.html#about">About Us</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <form class="search-box" id="navbar-search">
+      <input type="text" id="navbar-search-input" placeholder="Search jewellery...">
+      <button type="submit">🔍</button>
+    </form>
+    <button class="cart-btn" onclick="window.location.href='cart.html'">
+      🛒 Cart <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="breadcrumb">
+  <a href="index.html">Home</a><span>›</span> Shopping Cart
+</div>
+
+<div class="cart-layout" id="cart-layout"></div>
+
+<script src="js/cart.js"></script>
+<script>
+function renderCart() {
+  const items = Cart.get();
+  const layout = document.getElementById('cart-layout');
+
+  if (items.length === 0) {
+    layout.innerHTML = `
+      <div class="empty-cart" style="width:100%;">
+        <div class="empty-icon">🛒</div>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added anything yet.</p>
+        <button class="btn-primary" style="background:var(--primary);color:white;padding:14px 35px;border-radius:30px;font-size:1rem;font-weight:700;border:none;cursor:pointer;" onclick="window.location.href='shop.html'">Start Shopping</button>
+      </div>`;
+    return;
+  }
+
+  const subtotal = Cart.total();
+  const shipping = subtotal >= 999 ? 0 : 99;
+  const total    = subtotal + shipping;
+
+  layout.innerHTML = `
+    <div class="cart-items">
+      <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:20px;">Shopping Cart (${items.length} item${items.length > 1 ? 's' : ''})</h2>
+      ${items.map(item => `
+        <div class="cart-item" id="item-${item.key.replace(/[^a-z0-9]/gi,'_')}">
+          <img src="${item.imageUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100?text=Aurelia'">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-meta">Brand: ${item.brand} · Size: ${item.size}${item.color ? ' · Colour: ' + item.color : ''}</div>
+            <div class="cart-item-price">${formatPrice(item.price)}</div>
+            <div class="cart-item-actions">
+              <div class="qty-control">
+                <button onclick="updateQty('${item.key}', ${item.qty - 1})">−</button>
+                <span>${item.qty}</span>
+                <button onclick="updateQty('${item.key}', ${item.qty + 1})">+</button>
+              </div>
+              <span style="color:var(--gray);font-size:0.85rem;">= ${formatPrice(item.price * item.qty)}</span>
+              <button class="btn-remove" onclick="removeItem('${item.key}')">✕ Remove</button>
+            </div>
+          </div>
+        </div>`).join('')}
+      <button onclick="window.location.href='shop.html'" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:0.9rem;margin-top:10px;">← Continue Shopping</button>
+    </div>
+
+    <div class="cart-summary">
+      <h3>Order Summary</h3>
+      <div class="summary-row"><span>Subtotal (${items.reduce((s,i)=>s+i.qty,0)} items)</span><span>${formatPrice(subtotal)}</span></div>
+      <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? '<span style="color:#4caf50;font-weight:700;">FREE</span>' : formatPrice(shipping)}</span></div>
+      ${shipping > 0 ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:10px;">Add ${formatPrice(999 - subtotal)} more for free shipping</div>` : ''}
+      <div class="summary-row total"><span>Total</span><span>${formatPrice(total)}</span></div>
+      <button class="btn-checkout" onclick="window.location.href='checkout.html'">Proceed to Checkout →</button>
+      <div style="text-align:center;margin-top:15px;font-size:0.8rem;color:var(--gray);">🔒 Secure checkout · Free returns</div>
+    </div>`;
+}
+
+function updateQty(key, newQty) {
+  if (newQty < 1) { removeItem(key); return; }
+  if (newQty > 10) return;
+  Cart.updateQty(key, newQty);
+  renderCart();
+}
+
+function removeItem(key) {
+  Cart.remove(key);
+  showToast('Item removed from cart', 'error');
+  renderCart();
+}
+
+renderCart();
+</script>
+</body>
+</html>

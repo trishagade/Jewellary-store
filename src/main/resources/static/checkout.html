@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout – Aurelia</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">
+    <span class="logo-icon">💎</span>
+    <div>
+      <div class="logo-text">Aurelia</div>
+      <div class="logo-sub">Fine Jewellery</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="cart.html">Cart</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="cart-btn" onclick="window.location.href='cart.html'">
+      🛒 Cart <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="breadcrumb">
+  <a href="index.html">Home</a><span>›</span>
+  <a href="cart.html">Cart</a><span>›</span> Checkout
+</div>
+
+<div class="checkout-layout">
+
+  <!-- FORM -->
+  <div class="checkout-form">
+    <h2>📦 Delivery Details</h2>
+    <form id="checkout-form" onsubmit="placeOrder(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="firstName" placeholder="Priya" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="lastName" placeholder="Sharma" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="email" placeholder="priya@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number *</label>
+        <input type="tel" id="phone" placeholder="+91 98765 43210" required pattern="[0-9+\s\-]{10,15}">
+      </div>
+      <div class="form-group">
+        <label>Street Address *</label>
+        <input type="text" id="street" placeholder="123, Rose Apartments, MG Road" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" id="city" placeholder="Mumbai" required>
+        </div>
+        <div class="form-group">
+          <label>State *</label>
+          <select id="state" required>
+            <option value="">Select State</option>
+            <option>Maharashtra</option><option>Delhi</option><option>Karnataka</option>
+            <option>Tamil Nadu</option><option>Gujarat</option><option>Rajasthan</option>
+            <option>West Bengal</option><option>Uttar Pradesh</option><option>Telangana</option>
+            <option>Kerala</option><option>Punjab</option><option>Haryana</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>PIN Code *</label>
+          <input type="text" id="pincode" placeholder="400001" required pattern="[0-9]{6}">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" value="India" readonly style="background:#f5f5f5;">
+        </div>
+      </div>
+
+      <h2 style="margin:25px 0 20px;">💳 Payment Method</h2>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:25px;">
+        <label style="display:flex;align-items:center;gap:12px;padding:15px;border:2px solid var(--primary);border-radius:10px;cursor:pointer;background:#fff5f8;">
+          <input type="radio" name="payment" value="cod" checked> <span style="font-weight:700;">💵 Cash on Delivery</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;padding:15px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;">
+          <input type="radio" name="payment" value="upi"> <span style="font-weight:700;">📱 UPI / PhonePe / GPay</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;padding:15px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;">
+          <input type="radio" name="payment" value="card"> <span style="font-weight:700;">💳 Credit / Debit Card</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn-place-order" id="place-btn">🎉 Place Order</button>
+    </form>
+  </div>
+
+  <!-- ORDER SUMMARY -->
+  <div class="order-summary-panel">
+    <h3>Your Order</h3>
+    <div id="order-items"></div>
+    <div style="background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-top:15px;">
+      <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
+      <div class="summary-row"><span>Shipping</span><span id="s-shipping">₹0</span></div>
+      <div class="summary-row total"><span>Total</span><span id="s-total">₹0</span></div>
+    </div>
+    <div style="background:white;border-radius:var(--radius);padding:15px;box-shadow:var(--shadow);margin-top:15px;font-size:0.85rem;color:var(--gray);line-height:1.7;">
+      🚚 Estimated delivery: <strong>3–5 business days</strong><br>
+      🔒 Your data is safe with us<br>
+      ↩️ 30-day hassle-free returns
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h2>Order Placed!</h2>
+    <p id="modal-msg">Thank you for shopping with Aurelia! Your order has been confirmed and will be delivered in 3–5 business days.</p>
+    <button class="btn-primary" onclick="window.location.href='index.html'">Continue Shopping</button>
+  </div>
+</div>
+
+<script src="js/cart.js"></script>
+<script>
+function renderOrderSummary() {
+  const items = Cart.get();
+  if (items.length === 0) { window.location.href = 'cart.html'; return; }
+
+  const subtotal = Cart.total();
+  const shipping = subtotal >= 999 ? 0 : 99;
+  const total    = subtotal + shipping;
+
+  document.getElementById('order-items').innerHTML = items.map(item => `
+    <div class="order-item">
+      <img src="${item.imageUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60?text=S'">
+      <div class="order-item-info">
+        <div class="order-item-name">${item.name}</div>
+        <div class="order-item-meta">${item.size} · Qty: ${item.qty}</div>
+      </div>
+      <div class="order-item-price">${formatPrice(item.price * item.qty)}</div>
+    </div>`).join('');
+
+  document.getElementById('s-subtotal').textContent = formatPrice(subtotal);
+  document.getElementById('s-shipping').textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
+  document.getElementById('s-total').textContent = formatPrice(total);
+}
+
+async function placeOrder(e) {
+  e.preventDefault();
+  const btn = document.getElementById('place-btn');
+  btn.disabled = true;
+  btn.textContent = 'Placing Order...';
+
+  const items    = Cart.get();
+  const subtotal = Cart.total();
+  const shipping = subtotal >= 999 ? 0 : 99;
+
+  const address = [
+    document.getElementById('street').value,
+    document.getElementById('city').value,
+    document.getElementById('state').value,
+    document.getElementById('pincode').value,
+    'India'
+  ].join(', ');
+
+  const order = {
+    customerName:  `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`,
+    customerEmail: document.getElementById('email').value,
+    customerPhone: document.getElementById('phone').value,
+    address,
+    cartItemsJson: JSON.stringify(items),
+    totalAmount:   subtotal + shipping
+  };
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order)
+    });
+    const placed = await res.json();
+    Cart.clear();
+    document.getElementById('modal-msg').textContent =
+      `Thank you, ${order.customerName}! Your order #${placed.id} has been confirmed. We'll send updates to ${order.customerEmail}.`;
+    document.getElementById('success-modal').classList.add('show');
+  } catch {
+    showToast('Failed to place order. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = '🎉 Place Order';
+  }
+}
+
+renderOrderSummary();
+</script>
+</body>
+</html>
